@@ -73,21 +73,24 @@ if df is not None:
 
         col1, col2 = st.columns(2)
 
-        # GRÁFICO 1: RADAR DE DESEMPENHO (Usa as notas brutas de 1 a 5)
+        # GRÁFICO 1: RADAR DE DESEMPENHO (Agora Dinâmico e Ponderado!)
         with col1:
             st.subheader("🎯 Comparativo por Critério (Radar)")
             fig_radar = go.Figure()
             
             for mat in selecionados:
                 col_idx = materiais_map[mat]
-                notas = pd.to_numeric(df.iloc[:, col_idx], errors='coerce').fillna(0).tolist()
+                notas_brutas = pd.to_numeric(df.iloc[:, col_idx], errors='coerce').fillna(0).tolist()
                 
-                # Fechar o polígono do radar
-                notas += [notas[0]]
+                # MATEMÁTICA: Multiplica a nota bruta pelo peso do slider também no Radar!
+                notas_ponderadas_radar = [n * pesos_dinamicos[c] for n, c in zip(notas_brutas, criterios)]
+                
+                # Fechar o polígono do radar repetindo o primeiro valor no fim
+                notas_ponderadas_radar += [notas_ponderadas_radar[0]]
                 criterios_fechados = criterios + [criterios[0]]
                 
                 fig_radar.add_trace(go.Scatterpolar(
-                    r=notas,
+                    r=notas_ponderadas_radar,
                     theta=criterios_fechados,
                     fill='toself',
                     name=mat,
@@ -95,12 +98,12 @@ if df is not None:
                 ))
             
             fig_radar.update_layout(
-                polar=dict(radialaxis=dict(visible=True, range=[0, 5.5])),
+                # ATENÇÃO: Removi o range=[0, 5.5] para o gráfico crescer e encolher livremente!
+                polar=dict(radialaxis=dict(visible=True)), 
                 showlegend=True,
                 margin=dict(l=40, r=40, t=40, b=40)
             )
             st.plotly_chart(fig_radar, use_container_width=True)
-
 
         # --- CÁLCULO DAS NOTAS PONDERADAS EM TEMPO REAL ---
         dados_barras = []
