@@ -6,10 +6,10 @@ primaryColor = "#2323FF"
 base = "dark" 
 
 # Cor de fundo principal
-backgroundColor = "#4A4A4A"
+backgroundColor = "#000000"
 
 # Cor da barra lateral (Sidebar)
-secondaryBackgroundColor = "#3D3D3D"
+secondaryBackgroundColor = "#514d4d"
 
 # Cor do texto
 textColor = "#FFFAFA"
