@@ -1,0 +1,15 @@
+[theme]
+# A cor dos destaques (Sliders, Checkboxes, Botões)
+primaryColor = "#2323FF" 
+
+# Opcional: Se quiser forçar o fundo do site a ser claro ou escuro
+base = "dark" 
+
+# Cor de fundo principal
+backgroundColor = "#4A4A4A"
+
+# Cor da barra lateral (Sidebar)
+secondaryBackgroundColor = "#3D3D3D"
+
+# Cor do texto
+textColor = "#FFFAFA"
