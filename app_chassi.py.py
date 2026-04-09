@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
-import os # <--- O SEGREDO ESTÁ AQUI
+import os
 
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Dashboard Chassi", layout="wide")
@@ -100,39 +100,51 @@ if df is not None:
             fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True)), showlegend=True, margin=dict(l=40, r=40, t=40, b=40))
             st.plotly_chart(fig_radar, use_container_width=True)
 
-        # CÁLCULO DAS NOTAS PONDERADAS
+        # CÁLCULO DAS NOTAS PONDERADAS E BRUTAS PARA A TABELA
         dados_barras = []
         df_tabela = pd.DataFrame({'Critério': criterios})
         linha_totais = {'Critério': '🏆 TOTAL PONDERADO'}
 
         for mat in selecionados:
             col_idx = materiais_map[mat]
-            notas_brutas = pd.to_numeric(df.iloc[:, col_idx], errors='coerce').fillna(0).tolist()
-            notas_ponderadas = [n * pesos_dinamicos[c] for n, c in zip(notas_brutas, criterios)]
-            pontuacao_total = sum(notas_ponderadas)
+            # Pega as notas e já arredonda para 1 casa decimal
+            notas_brutas = [round(n, 1) for n in pd.to_numeric(df.iloc[:, col_idx], errors='coerce').fillna(0).tolist()]
+            notas_ponderadas = [round(n * pesos_dinamicos[c], 1) for n, c in zip(notas_brutas, criterios)]
+            pontuacao_total = round(sum(notas_ponderadas), 1)
             
             dados_barras.append({'Material': mat, 'Pontuação': pontuacao_total})
-            df_tabela[f"{mat} (Nota Ponderada)"] = notas_ponderadas
-            linha_totais[f"{mat} (Nota Ponderada)"] = pontuacao_total
+            
+            # Adiciona a Nota e o Ponderado lado a lado na tabela
+            df_tabela[f"{mat} (Nota)"] = notas_brutas
+            df_tabela[f"{mat} (Ponderado)"] = notas_ponderadas
+            
+            # Na linha de totais, colocamos um traço para a nota bruta
+            linha_totais[f"{mat} (Nota)"] = "-"
+            linha_totais[f"{mat} (Ponderado)"] = pontuacao_total
 
-        # GRÁFICO 2: PONTUAÇÃO TOTAL PONDERADA
+       # GRÁFICO 2: PONTUAÇÃO TOTAL PONDERADA
         with col2:
             st.subheader("🏆 Pontuação Final Ponderada")
             df_barras = pd.DataFrame(dados_barras).sort_values(by='Pontuação', ascending=False)
             
             fig_bar = px.bar(
                 df_barras, x='Material', y='Pontuação', text='Pontuação', color='Material',
-                color_discrete_sequence=['#00FFFF', '#00CCCC', '#009999', '#006666', "#011F1F", "#6998C0"
-                "#ABEBDE", "#0F5091", "#828BC3", "#333CD2", "#375050"][:len(selecionados)] 
-                # Tons de Ciano!
+                color_discrete_sequence=[
+                    '#00FFFF', '#00CCCC', '#009999', '#006666', '#003333', 
+                    '#6998C0', '#ABEBDE', '#1E90FF', '#4682B4', '#5F9EA0', '#87CEEB'
+                ]
             )
             fig_bar.update_traces(texttemplate='%{text:.1f}', textposition='outside')
             fig_bar.update_layout(yaxis_range=[0, max(df_barras['Pontuação']) * 1.2], showlegend=False)
             st.plotly_chart(fig_bar, use_container_width=True)
-
         # TABELA: A MATRIZ DINÂMICA
         st.markdown("---")
         st.subheader("📋 Matriz de Decisão Dinâmica")
+        
+        # Junta a linha do Somatório Total ao fundo da tabela
         df_tabela = pd.concat([df_tabela, pd.DataFrame([linha_totais])], ignore_index=True)
         df_fixo = df_tabela.set_index('Critério')
-        st.dataframe(df_fixo.style.format("{:.1f}"), use_container_width=True)
+        
+        # Exibe a tabela interativa (agora com as notas brutas!)
+        st.dataframe(df_fixo, use_container_width=True)
+        st.dataframe(df_fixo, use_container_width=True)
